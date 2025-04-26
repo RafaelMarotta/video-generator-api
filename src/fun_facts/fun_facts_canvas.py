@@ -1,9 +1,9 @@
+from core.commons.font import get_valid_font_path
 from core.commons.image import add_rounded_border_to_image_clip
 from core.domain.pipeline import Step
 from moviepy.video.VideoClip import ImageClip, TextClip
 from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
 from typing import Callable
-
 
 class GenerateFunFactCanvas(Step):
     def __init__(
@@ -37,7 +37,7 @@ class GenerateFunFactCanvas(Step):
             size=(900, 200),
             method="caption",
             color="white",
-            font="/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+            font=get_valid_font_path(input["font_path"]),
         ).with_duration(typing_clip.duration).with_position(("center", 100))
 
         img_with_border = add_rounded_border_to_image_clip(image_clip).with_position(

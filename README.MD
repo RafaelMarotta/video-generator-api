@@ -29,6 +29,23 @@ Install the required dependencies:
 pip install -r requirements.txt
 ```
 
+Additionally, to use the Google Cloud Text-to-Speech service, set the following environment variable:
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS={pathToYourCredentials}/credentials.json
+```
+
+Replace `{pathToYourCredentials}` with the absolute path to your Google Cloud service account credentials file.
+
+### How to Generate Google Cloud Credentials
+
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/).
+2. Create a new project or select an existing one.
+3. Navigate to **IAM & Admin** > **Service Accounts**.
+4. Create a new service account and assign the role **"Text-to-Speech API User"**.
+5. Generate a new key in JSON format and download it.
+6. Use the path of this JSON file to set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable.
+
 ## Available Examples
 
 - **Quiz Pipeline**: generates an animated video with one question and four answer choices.
@@ -55,4 +72,3 @@ pipeline.execute({})
 This project is licensed under the MIT License.
 
 Developed by **Rafael Marotta** (rafaelmarottag@gmail.com) as part of the undergraduate thesis (TCC) at **PUC Minas**.
-

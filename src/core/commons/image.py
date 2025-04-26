@@ -1,11 +1,6 @@
 from core.commons.masks import rounded_mask
-from moviepy.video.VideoClip import VideoClip, ImageClip, ColorClip
+from moviepy.video.VideoClip import ImageClip, ColorClip
 from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
-from PIL import Image
-import numpy as np
-import tempfile
-import os
-
 
 def add_rounded_border_to_image_clip(
     image_clip: ImageClip,

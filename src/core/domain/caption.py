@@ -1,11 +1,11 @@
 import re
 import tempfile
 import textwrap
-import numpy as np
+from core.commons.font import get_valid_font_path
 from core.commons.masks import rounded_mask
 from core.domain.pipeline import Step
 from core.commons.audio_processor import generate_tts, create_silence
-from moviepy import audio, concatenate_videoclips, concatenate_audioclips, TextClip
+from moviepy import concatenate_videoclips, concatenate_audioclips, TextClip
 from moviepy.audio.io.AudioFileClip import AudioFileClip
 from moviepy.video.VideoClip import ColorClip
 from moviepy.video.compositing.CompositeVideoClip import CompositeVideoClip
@@ -28,7 +28,7 @@ def parse_color(color):
 
 @dataclass
 class BackgroundConfig:
-    color: Optional[str] = None  # color name or RGB tuple
+    color: Optional[str] = None 
     padding: int = 30
     width: Optional[int] = None
     height: Optional[int] = None
@@ -37,7 +37,7 @@ class BackgroundConfig:
 @dataclass
 class GenerateCaptionInput:
     text: str
-    font_path: str = "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf"
+    font_path: str = ""
     font_size: int = 70
     color: str = "white"
     background: Optional[BackgroundConfig] = None
@@ -139,7 +139,7 @@ class GenerateCaptionStep(Step):
             text=text,
             font_size=input.font_size,
             color=input.color,
-            font=input.font_path,
+            font=get_valid_font_path(input.font_path),
             method="label",
         ).with_duration(duration)
 

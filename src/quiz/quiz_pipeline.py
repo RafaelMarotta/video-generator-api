@@ -7,6 +7,8 @@ from core.domain.caption import (
     BackgroundConfig
 )
 
+font_path = "/System/Library/Fonts/Supplemental/Arial.ttf"
+
 # Step 1: Geração da legenda animada e narração da pergunta
 generate_question_typing = GenerateCaptionStepWithSpeech(
     "generate_question_typing",
@@ -17,7 +19,7 @@ generate_question_typing = GenerateCaptionStepWithSpeech(
         max_lines=4,
         max_chars_per_line=25,
         font_size=70,
-        font_path="/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+        font_path=font_path,
         color="black",
         background=BackgroundConfig(color=(255, 255, 255), padding=40, width=800),
     ),
@@ -54,7 +56,7 @@ for i, alt_text in enumerate(alternatives, start=1):
             max_lines=2,
             max_chars_per_line=25,
             font_size=70,
-            font_path="/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+            font_path=font_path,
             color="black",
             background=BackgroundConfig(color=(255, 255, 255), padding=40, width=800),
         ),

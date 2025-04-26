@@ -1,5 +1,5 @@
 import numpy as np
-from moviepy import ColorClip, ImageClip
+from moviepy import ImageClip
 from PIL import Image, ImageDraw
 
 def rounded_mask(size, radius):

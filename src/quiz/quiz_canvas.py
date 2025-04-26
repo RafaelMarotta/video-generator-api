@@ -27,8 +27,9 @@ class GenerateQuestionCanvas(Step):
             [background, typing_clip.with_position(("center", top_margin))]
         )
         composite.audio = audio_clip
-        context[self.name] = {
-            "composite": composite,
+        context["composites"] = context.get("composites", []) + [composite]
+
+        context["last_canvas"] = {
             "last_frame": composite.get_frame(composite.duration - 0.05),
             "top_margin": top_margin + 200,
         }
@@ -54,8 +55,9 @@ class GenerateAnswerCanvas(Step):
         composite = CompositeVideoClip([background, typing_clip])
         composite.audio = audio_clip
 
-        context[self.name] = {
-            "composite": composite,
+        context["composites"] = context.get("composites", []) + [composite]
+
+        context["last_canvas"] = {
             "last_frame": composite.get_frame(composite.duration - 0.05),
             "top_margin": top_margin,
         }

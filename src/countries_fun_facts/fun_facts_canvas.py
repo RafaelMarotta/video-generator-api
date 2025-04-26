@@ -78,6 +78,7 @@ class GenerateFunFactCanvas(Step):
         composite.audio = audio_clip
 
         context[self.name] = {
-            "composite": composite,
             "final_frame": composite.get_frame(composite.duration - 0.05),
         }
+
+        context["composites"] = context.get("composites", []) + [composite]

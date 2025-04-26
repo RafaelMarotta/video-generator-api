@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Callable
-
+from typing import Callable, List
 
 class Step(ABC):
     def __init__(self, name: str, description: str, input_transformer: Callable[[dict], dict] = None):
@@ -17,6 +16,15 @@ class Step(ABC):
     def execute(self, input: dict, context: dict):
         pass
 
+class ForeachStep(Step):
+    def __init__(self, name: str, description: str, input_transformer: Callable[[dict], dict] = [], step: Step = None):
+        super().__init__(name, description, input_transformer)
+        self.step = step
+        
+    def execute(self, input: dict, context: dict):
+        for item in input["items"]:
+            context["current"] = item
+            self.step.execute(context)
 
 class Pipeline:
     def __init__(self, name: str, description: str, steps: list[Step]):

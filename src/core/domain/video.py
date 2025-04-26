@@ -12,7 +12,7 @@ class ConcatenateVideoStep(Step):
         super().__init__(name, description, input_transformer)
 
     def execute(self, input: dict, context: dict):
-        video_clips: list[VideoClip] = input["video_clips"]
+        video_clips: list[VideoClip] = context["composites"]
         final_clip = concatenate_videoclips(video_clips, method="compose")
         context[self.name] = {"final_video": final_clip}
 

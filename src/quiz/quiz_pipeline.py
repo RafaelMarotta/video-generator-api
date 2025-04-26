@@ -1,20 +1,20 @@
 from quiz_canvas import GenerateQuestionCanvas, GenerateAnswerCanvas
-from core.domain.pipeline import Pipeline
+from core.domain.pipeline import Pipeline, ForeachStep
 from core.domain.video import ExportVideo, ConcatenateVideoStep
+from core.domain.debug import ExtractFrameStep
 from core.domain.caption import (
     GenerateCaptionStepWithSpeech,
     GenerateCaptionWithSpeechInput,
-    BackgroundConfig
+    BackgroundConfig,
 )
 
 font_path = "/System/Library/Fonts/Supplemental/Arial.ttf"
 
-# Step 1: Geração da legenda animada e narração da pergunta
 generate_question_typing = GenerateCaptionStepWithSpeech(
     "generate_question_typing",
     "Gera a legenda animada e a narração da pergunta do quiz",
     lambda context: GenerateCaptionWithSpeechInput(
-        text="Qual desses animais é capaz de dormir com metade do cérebro acordado?",
+        text=context["question_text"],
         effect="typing",
         max_lines=4,
         max_chars_per_line=25,
@@ -25,7 +25,6 @@ generate_question_typing = GenerateCaptionStepWithSpeech(
     ),
 )
 
-# Step 2: Composição visual do enunciado
 generate_question_canvas = GenerateQuestionCanvas(
     "generate_question_canvas",
     "Monta o visual da pergunta com o background, legenda e áudio",
@@ -36,60 +35,58 @@ generate_question_canvas = GenerateQuestionCanvas(
     },
 )
 
-# Step 3 a 6: Geração das alternativas e composição de cada uma
-alternatives = [
-    "A) Golfinho",
-    "B) Gato",
-    "C) Coruja",
-    "D) Tubarão"
-]
-
-steps = []
 previous_canvas_key = "generate_question_canvas"
 
-for i, alt_text in enumerate(alternatives, start=1):
-    typing_step = GenerateCaptionStepWithSpeech(
-        f"generate_answer_typing{i}",
-        f"Gera a legenda animada e a narração da alternativa {alt_text}",
-        lambda context, alt_text=alt_text: GenerateCaptionWithSpeechInput(
-            text=alt_text,
-            max_lines=2,
-            max_chars_per_line=25,
-            font_size=70,
-            font_path=font_path,
-            color="black",
-            background=BackgroundConfig(color=(255, 255, 255), padding=40, width=800),
+answers_pipeline = Pipeline(
+    "answers_pipeline",
+    "Pipeline de geração de vídeos com alternativas do quiz",
+    [
+        GenerateCaptionStepWithSpeech(
+            f"generate_answer_typing",
+            f"Gera a legenda animada e a narração da alternativa",
+            lambda context: GenerateCaptionWithSpeechInput(
+                text=context["current"],
+                max_lines=2,
+                max_chars_per_line=25,
+                font_size=70,
+                font_path=font_path,
+                color="black",
+                background=BackgroundConfig(
+                    color=(255, 255, 255), padding=40, width=800
+                ),
+            ),
         ),
-    )
-    canvas_step = GenerateAnswerCanvas(
-        f"generate_answer_canvas{i}",
-        f"Composição visual da alternativa {alt_text}",
-        lambda context, typing_key=typing_step.name, prev_canvas=previous_canvas_key: {
-            "last_frame": context[prev_canvas]["last_frame"],
-            "top_margin": context[prev_canvas]["top_margin"],
-            "typing_clip": context[typing_key]["typing_clip"],
-            "audio_clip": context[typing_key]["audio_clip"],
-        },
-    )
-    steps.extend([typing_step, canvas_step])
-    previous_canvas_key = canvas_step.name
+        GenerateAnswerCanvas(
+            "generate_answer_canvas",
+            "Composição visual da alternativa",
+            lambda context, typing_key=typing_step.name: {
+                "last_frame": context["last_canvas"]["last_frame"],
+                "top_margin": context["last_canvas"]["top_margin"],
+                "typing_clip": context[typing_key]["typing_clip"],
+                "audio_clip": context[typing_key]["audio_clip"],
+            },
+        ),
+    ],
+)
 
-# Step 7: Junta os vídeos das perguntas e alternativas
+create_answers = ForeachStep(
+    "create_answers",
+    "Geração de vídeos com alternativas do quiz",
+    lambda context: {"items": context["answers"]},
+    answers_pipeline,
+)
+
 join_video = ConcatenateVideoStep(
     "join_video",
     "Concatena todos os vídeos da pergunta e alternativas em sequência",
-    lambda context: {
-        "video_clips": [
-            context["generate_question_canvas"]["composite"],
-            context["generate_answer_canvas1"]["composite"],
-            context["generate_answer_canvas2"]["composite"],
-            context["generate_answer_canvas3"]["composite"],
-            context["generate_answer_canvas4"]["composite"],
-        ]
-    },
 )
 
-# Step 8: Exporta o vídeo final
+extract_final_frame = ExtractFrameStep(
+    "extract_final_frame",
+    "Extração do último frame do vídeo final",
+    lambda context: {"final_video": context["join_video"]["final_video"]},
+)
+
 final_step = ExportVideo(
     "export_video",
     "Exporta o vídeo final para um arquivo MP4",
@@ -98,17 +95,22 @@ final_step = ExportVideo(
     },
 )
 
-# Montagem da pipeline
 pipeline = Pipeline(
     "pipeline_quiz_animado",
     "Pipeline de geração de vídeo animado com pergunta e 4 alternativas",
     [
         generate_question_typing,
         generate_question_canvas,
-        *steps,
+        create_answers,
         join_video,
         final_step,
+        extract_final_frame,
     ],
 )
 
-pipeline.execute({})
+pipeline.execute(
+    {
+        "question_text": "Qual desses animais é capaz de dormir com metade do cérebro acordado?",
+        "answers": ["A) Golfinho", "B) Gato", "C) Coruja", "D) Tubarão"],
+    }
+)

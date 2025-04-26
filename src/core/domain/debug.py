@@ -28,7 +28,7 @@ class ExtractFrameStep(Step):
         frame_clip = ImageClip(frame)
 
         # Salva
-        output_path = input.get("output_path", "frame_debug.png")
+        output_path = input.get("output_path", "debug_output.png")
         frame_clip.save_frame(output_path)
 
         # Abre a imagem no sistema

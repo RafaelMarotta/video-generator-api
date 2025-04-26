@@ -1,5 +1,5 @@
 from core.domain.pipeline import Step
-from moviepy import VideoFileClip, concatenate_videoclips
+from moviepy import concatenate_videoclips
 from typing import Callable
 
 class ConcatenateVideoStep(Step):
@@ -29,3 +29,4 @@ class ExportVideo(Step):
         final_video = input["final_video"]
         output_path = input.get("output_path", "output.mp4")
         final_video.write_videofile(output_path, fps=10, logger="bar")
+

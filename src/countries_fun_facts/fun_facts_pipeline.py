@@ -3,20 +3,23 @@ from core.domain.caption import (
     GenerateCaptionStepWithSpeech,
     GenerateCaptionWithSpeechInput,
 )
+from core.domain.caption_ai import GenerateCaptionAIStep
 from core.domain.video import ExportVideo
 from core.domain.debug import ExtractFrameStep
 from core.domain.pipeline import Pipeline
 
 font_path = "/System/Library/Fonts/Supplemental/Arial.ttf"
 
-generate_fun_fact_typing = GenerateCaptionStepWithSpeech(
+generate_fun_fact_typing = GenerateCaptionAIStep(
     "generate_fun_fact_typing",
     "Gera a legenda animada e a narração da curiosidade",
     lambda context: GenerateCaptionWithSpeechInput(
         text=context["fun_fact_text"],
         max_lines=3,
         max_chars_per_line=35,
-        font_size=55,
+        font_size=50,
+        width=800,
+        height=250,
         font_path=font_path,
         color="white",
     ),
@@ -28,6 +31,7 @@ generate_fun_fact_canvas = GenerateFunFactCanvas(
     lambda context: {
         "title_text": context["title_text"],
         "font_path": font_path,
+        "fact_number": context["fact_number"],
         "background_path": "src/countries_fun_facts/assets/background-fun-facts.png",
         "typing_clip": context["generate_fun_fact_typing"]["typing_clip"],
         "audio_clip": context["generate_fun_fact_typing"]["audio_clip"],
@@ -57,7 +61,7 @@ pipeline_fun_fact = Pipeline(
         generate_fun_fact_typing,
         generate_fun_fact_canvas,
         export_final_fun_fact,
-        extract_final_frame,
+        # extract_final_frame,
     ],
 )
 
@@ -67,4 +71,5 @@ pipeline_fun_fact.execute({
     "fact_image": "src/countries_fun_facts/assets/example.png",
     "country_code": "br",
     "fun_fact_text": "Na cidade de Belém, existe um mercado chamado Ver-o-Peso onde você encontra desde ervas medicinais da floresta até poções do amor vendidas por feiticeiras locais. É um dos mercados mais antigos e místicos da América Latina!",
+    "fact_number": "1"
 })

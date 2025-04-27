@@ -35,8 +35,6 @@ generate_question_canvas = GenerateQuestionCanvas(
     },
 )
 
-previous_canvas_key = "generate_question_canvas"
-
 answers_pipeline = Pipeline(
     "answers_pipeline",
     "Pipeline de geração de vídeos com alternativas do quiz",
@@ -59,11 +57,11 @@ answers_pipeline = Pipeline(
         GenerateAnswerCanvas(
             "generate_answer_canvas",
             "Composição visual da alternativa",
-            lambda context, typing_key=typing_step.name: {
+            lambda context: {
                 "last_frame": context["last_canvas"]["last_frame"],
                 "top_margin": context["last_canvas"]["top_margin"],
-                "typing_clip": context[typing_key]["typing_clip"],
-                "audio_clip": context[typing_key]["audio_clip"],
+                "typing_clip": context["generate_answer_typing"]["typing_clip"],
+                "audio_clip": context["generate_answer_typing"]["audio_clip"],
             },
         ),
     ],
@@ -104,7 +102,7 @@ pipeline = Pipeline(
         create_answers,
         join_video,
         final_step,
-        extract_final_frame,
+        #extract_final_frame,
     ],
 )
 

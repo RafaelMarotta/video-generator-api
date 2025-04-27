@@ -42,8 +42,8 @@ class GenerateFunFactCanvas(Step):
             font=get_valid_font_path(input["font_path"]),
         ).with_duration(typing_clip.duration).with_position(("center", 100))
 
-        question_number = TextClip(
-            text="#1",
+        fact_number = TextClip(
+            text="#" + input["fact_number"],
             font_size=80,
             size=(200, 200),
             method="caption",
@@ -57,7 +57,7 @@ class GenerateFunFactCanvas(Step):
 
         caption_clip = typing_clip.with_position(("center", 1575))
 
-        clips = [background, title_clip, img_with_border, caption_clip, question_number]
+        clips = [background, title_clip, img_with_border, caption_clip, fact_number]
         
         country_code = input.get("country_code")
         

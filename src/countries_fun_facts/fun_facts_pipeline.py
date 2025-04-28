@@ -1,10 +1,11 @@
+from core.domain.upload import UploadYoutubeVideoStep
 from countries_fun_facts.fun_facts_canvas import GenerateFunFactCanvas
 from core.domain.caption import (
     GenerateCaptionStepWithSpeech,
     GenerateCaptionWithSpeechInput,
 )
 from core.domain.caption_ai import GenerateCaptionAIStep
-from core.domain.video import ExportVideo
+from core.domain.video import ConcatenateVideoStep, ExportVideo
 from core.domain.debug import ExtractFrameStep
 from core.domain.pipeline import Pipeline
 
@@ -17,9 +18,9 @@ generate_fun_fact_typing = GenerateCaptionAIStep(
         text=context["fun_fact_text"],
         max_lines=3,
         max_chars_per_line=35,
-        font_size=50,
-        width=800,
-        height=250,
+        font_size=55,
+        width=1000,
+        height=150,
         font_path=font_path,
         color="white",
     ),
@@ -54,6 +55,16 @@ extract_final_frame = ExtractFrameStep(
     },
 )
 
+upload_final_video = UploadYoutubeVideoStep(
+    "upload_final_video",
+    "Upload do vídeo final para o YouTube",
+    lambda context: {
+        "title": "Curiosidade sobre o Brasil",
+        "description": "Curiosidade sobre o Brasil",
+        "final_video": context["composites"][0]
+    },
+)
+
 pipeline_fun_fact = Pipeline(
     "pipeline_fun_fact_country",
     "Pipeline de geração de vídeo com curiosidade sobre um país",
@@ -62,9 +73,9 @@ pipeline_fun_fact = Pipeline(
         generate_fun_fact_canvas,
         export_final_fun_fact,
         # extract_final_frame,
+        upload_final_video
     ],
 )
-
 # Execução da pipeline
 pipeline_fun_fact.execute({
     "title_text": "Curiosidades sobre o Brasil",

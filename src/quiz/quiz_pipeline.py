@@ -1,4 +1,4 @@
-from quiz_canvas import GenerateQuestionCanvas, GenerateAnswerCanvas
+from quiz_canvas import GenerateQuestionCanvas, GenerateAnswerCanvas, GenerateProgressBarCanvas
 from core.domain.pipeline import Pipeline, ForeachStep
 from core.domain.video import ExportVideo, ConcatenateVideoStep
 from core.domain.debug import ExtractFrameStep
@@ -7,6 +7,7 @@ from core.domain.caption import (
     GenerateCaptionWithSpeechInput,
     BackgroundConfig,
 )
+from core.domain.progress_bar import GenerateProgressBarStep
 
 font_path = "/System/Library/Fonts/Supplemental/Arial.ttf"
 
@@ -31,7 +32,7 @@ generate_question_canvas = GenerateQuestionCanvas(
     lambda context: {
         "background_path": "src/quiz/assets/background-quiz.png",
         "typing_clip": context["generate_question_typing"]["typing_clip"],
-        "audio_clip": context["generate_question_typing"]["audio_clip"],
+        "audio_clip": context["generate_question_typing"]["audio_clip"]
     },
 )
 
@@ -74,6 +75,20 @@ create_answers = ForeachStep(
     answers_pipeline,
 )
 
+progress_bar = GenerateProgressBarStep(
+    "progress_bar",
+    "Geração de progresso do quiz"
+)
+
+progress_bar_canvas = GenerateProgressBarCanvas(
+    "progress_bar_canvas",
+    "Geração de progresso do quiz",
+    lambda context: {
+        "progress_clip": context["progress_bar"]["progress_clip"],
+        "last_frame": context["last_canvas"]["last_frame"],
+    }
+)
+
 join_video = ConcatenateVideoStep(
     "join_video",
     "Concatena todos os vídeos da pergunta e alternativas em sequência",
@@ -100,9 +115,11 @@ pipeline = Pipeline(
         generate_question_typing,
         generate_question_canvas,
         create_answers,
+        progress_bar,
+        progress_bar_canvas,
         join_video,
         final_step,
-        #extract_final_frame,
+        # extract_final_frame,
     ],
 )
 

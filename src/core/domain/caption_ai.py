@@ -2,15 +2,13 @@ import ast
 import os
 import tempfile
 from moviepy import AudioFileClip, CompositeVideoClip, TextClip, concatenate_videoclips, ColorClip
-from openai import OpenAI
+from core.commons.openai import llm  # Importa a função genérica
 from core.commons.audio_processor import generate_tts
 from core.commons.font import get_valid_font_path
 from core.commons.masks import rounded_mask
 from core.domain.pipeline import Step
 from core.domain.caption import GenerateCaptionWithSpeechInput
 from typing import Callable
-
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 class GenerateCaptionAIStep(Step):
     def __init__(self, name: str, description: str, input_transformer: Callable[[dict], dict] = None):
@@ -96,42 +94,32 @@ class GenerateCaptionAIStep(Step):
             "- Output must be directly parsable as Python code."
         )
 
-        input_text = (
+        user_input = (
             f"text: {input_data.text}\n"
             f"max_lines: {input_data.max_lines}\n"
             f"max_chars_per_line: {input_data.max_chars_per_line}"
         )
 
-        messages = [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": input_text},
-        ]
+        def validate_response(output: str) -> bool:
+            try:
+                parsed = ast.literal_eval(output)
+                return (
+                    isinstance(parsed, list) and
+                    all(isinstance(block, list) and all(isinstance(line, str) for line in block) for block in parsed)
+                )
+            except Exception:
+                return False
 
-        if expected_output:
-            messages.append(
-                {"role": "user", "content": f"Expected Output: {expected_output}"}
-            )
+        raw_blocks = llm(
+            system_prompt=system_prompt,
+            user_input=user_input,
+            validate_response=validate_response,
+            expected_output=expected_output,
+            max_retries=3
+        )
 
-        try:
-            response = client.chat.completions.create(
-                model="gpt-3.5-turbo", messages=messages
-            )
-            raw_content = response.model_dump()["choices"][0]["message"]["content"]
-            print(raw_content)
+        if isinstance(raw_blocks, dict) and "error" in raw_blocks:
+            raise ValueError(f"Failed to generate caption blocks: {raw_blocks['error']}")
 
-            # --- NOVO: Limpeza do conteúdo antes do ast.literal_eval
-            cleaned_content = raw_content.strip()
-
-            # Remove possíveis blocos de ```plaintext, ```json, ``` etc
-            if cleaned_content.startswith("```"):
-                cleaned_content = cleaned_content.split("```")[1].strip()
-            if cleaned_content.startswith("plaintext"):
-                cleaned_content = cleaned_content[len("plaintext"):].strip()
-            if cleaned_content.startswith("json"):
-                cleaned_content = cleaned_content[len("json"):].strip()
-
-            blocks = ast.literal_eval(cleaned_content)
-            return blocks
-
-        except Exception as e:
-            return {"error": str(e)}
+        cleaned_blocks = ast.literal_eval(raw_blocks)
+        return cleaned_blocks

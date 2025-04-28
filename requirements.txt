@@ -3,3 +3,7 @@ google-cloud-texttospeech==2.15.1
 matplotlib==3.9.4
 numpy==2.0.2
 openai==1.76.0
+google-api-python-client==2.127.0
+google-auth==2.29.0
+google-auth-oauthlib==1.2.0
+google-auth-httplib2==0.2.0

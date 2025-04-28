@@ -8,7 +8,7 @@ class Step(ABC):
         self.input_transformer = input_transformer
 
     def run(self, context: dict):
-        print(f"Running step {self.name}")
+        print(f"{self.description}")
         input_data = self.input_transformer(context) if self.input_transformer else {}
         self.execute(input_data, context)
 

@@ -35,29 +35,22 @@ class GenerateFunFactCanvas(Step):
         title_clip = TextClip(
             text=title_text,
             font_size=80,
-            size=(880, 200),
+            size=(880, 350),
             method="caption",
             text_align="center",
             color="white",
+            stroke_color="black",
+            stroke_width=2,
             font=get_valid_font_path(input["font_path"]),
-        ).with_duration(typing_clip.duration).with_position(("center", 100))
-
-        fact_number = TextClip(
-            text="#" + input["fact_number"],
-            font_size=80,
-            size=(200, 200),
-            method="caption",
-            color="black",
-            font=get_valid_font_path(input["font_path"]),
-        ).with_duration(typing_clip.duration).with_position((175, 350))
+        ).with_duration(typing_clip.duration).with_position(("center", 200))
 
         img_with_border = add_rounded_border_to_image_clip(image_clip).with_position(
-            ("center", 350)
+            ("center", "center")
         )
 
-        caption_clip = typing_clip.with_position(("center", 1575))
+        caption_clip = typing_clip.with_position(("center", 1385))
 
-        clips = [background, title_clip, img_with_border, caption_clip, fact_number]
+        clips = [background, title_clip, img_with_border, caption_clip]
         
         country_code = input.get("country_code")
         
@@ -66,9 +59,9 @@ class GenerateFunFactCanvas(Step):
             if os.path.exists(flag_path):
                 flag_clip = (
                     ImageClip(flag_path)
-                    .resized(width=100)
+                    .resized(width=200)
                     .with_duration(typing_clip.duration)
-                    .with_position((740, 415))  # canto superior direito
+                    .with_position(("center", 100))  # canto superior direito
                 )
                 clips.append(flag_clip)
             else:

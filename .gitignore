@@ -3,3 +3,7 @@ src/**/__pycache__
 output.mp4
 debug_output.png
 token.pickle
+debug.png
+debug/*
+src/countries_fun_facts/.DS_Store
+src/.DS_Store

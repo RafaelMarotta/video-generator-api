@@ -20,7 +20,7 @@ app.add_middleware(
 )
 
 # Diretório onde os vídeos são salvos
-VIDEO_DIR = "/Users/marotta/Movies"
+VIDEO_DIR = os.getenv("OUTPUT_PATH", "")
 
 # Models
 class VideoRequest(BaseModel):

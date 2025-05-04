@@ -13,7 +13,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://www.rafaelmarotta.dev", "http://www.rafaelmarotta.dev"],
+    allow_origins=["http://localhost:3000", "https://www.rafaelmarotta.dev", "http://www.rafaelmarotta.dev", "http://192.168.0.185"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -100,7 +100,8 @@ async def video_progress_stream(video_id: str, request: Request):
   allowed_origins = {
     "http://localhost:3000",
     "https://www.rafaelmarotta.dev",
-    "http://www.rafaelmarotta.dev"
+    "http://www.rafaelmarotta.dev",
+    "http://192.168.0.185"
   }
   response_headers = {
     "Cache-Control": "no-cache",

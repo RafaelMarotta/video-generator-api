@@ -2,6 +2,7 @@ import json
 import os
 from abc import ABC, abstractmethod
 from typing import Callable, List
+from core.domain.progress_manager import progress_manager
 
 def make_serializable(obj):
   try:
@@ -18,7 +19,7 @@ class Step(ABC):
 
   def run(self, context: dict, write_debug: bool = False, debug_dir: str = "debug"):
     print(f"{self.description}")
-
+    pipeline_id = context.get("id")
     input_data = self.input_transformer(context) if self.input_transformer else {}
     self.execute(input_data, context)
 
@@ -49,20 +50,74 @@ class ForeachStep(Step):
     super().__init__(name, description, input_transformer)
     self.step = step
 
+  def flatten_steps(self):
+    return self.step.flatten_steps() if isinstance(self.step, Pipeline) else [self.step]
+
   def execute(self, input: dict, context: dict):
     items = input.get("items", [])
-    for item in items:
+    for i, item in enumerate(items):
       context["current"] = item
-      self.step.run(context)  # Mantém o write_debug do pai
+      self.step.run(context)
 
-class Pipeline:
+class Pipeline(Step):
   def __init__(self, name: str, description: str, steps: List[Step], write_debug: bool = False, debug_dir: str = "debug"):
-    self.name = name
-    self.description = description
+    super().__init__(name, description)
     self.steps = steps
     self.write_debug = write_debug
     self.debug_dir = debug_dir
 
-  def execute(self, context: dict):
+  def execute(self, input: dict, context: dict):
+    # Implementação vazia obrigatória por herança abstrata
+    pass
+
+  def flatten_steps(self) -> List[Step]:
+    flat = []
     for step in self.steps:
-      step.run(context, write_debug=self.write_debug, debug_dir=self.debug_dir)
+      if isinstance(step, Pipeline):
+        flat.extend(step.flatten_steps())
+      elif isinstance(step, ForeachStep):
+        flat.extend(step.flatten_steps())
+      else:
+        flat.append(step)
+    return flat
+
+  def run(self, context: dict, write_debug: bool = False, debug_dir: str = "debug"):
+    pipeline_id = context.get("id")
+    flat_steps = self.flatten_steps()
+    step_index = 0
+
+    def publish_progress():
+      progress_manager.publish(pipeline_id, json.dumps({
+        "executed": [
+          {"name": s.name, "description": s.description}
+          for s in flat_steps[:step_index]
+        ],
+        "running": [
+          {"name": s.name, "description": s.description}
+          for s in flat_steps[step_index:]
+        ]
+      }))
+
+    for step in self.steps:
+      if isinstance(step, Pipeline):
+        step.run(context, write_debug=self.write_debug, debug_dir=self.debug_dir)
+        step_index += len(step.flatten_steps())
+
+      elif isinstance(step, ForeachStep):
+        input_data = step.input_transformer(context) if step.input_transformer else {}
+        items = input_data.get("items", [])
+        for i, item in enumerate(items):
+          context["current"] = item
+          publish_progress()
+          step.step.run(context, write_debug=self.write_debug, debug_dir=self.debug_dir)
+          step_index += 1
+
+      else:
+        publish_progress()
+        step.run(context, write_debug=self.write_debug, debug_dir=self.debug_dir)
+        step_index += 1
+
+    # Finaliza pipeline
+    progress_manager.publish(pipeline_id, json.dumps({
+      "event": "video_ready"
+    }))

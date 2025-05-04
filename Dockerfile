@@ -13,7 +13,7 @@ COPY . .
 EXPOSE 8000
 
 # Define variáveis de ambiente básicas
-ENV PYTHONPATH=/app/src
+ENV PYTHONPATH=/src
 
 # Comando de produção
 CMD ["gunicorn", "app.main:app", "-k", "uvicorn.workers.UvicornWorker", "--workers", "4", "--bind", "0.0.0.0:8000"]

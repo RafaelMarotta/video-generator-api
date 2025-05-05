@@ -122,6 +122,14 @@ def build_pipeline_quiz() -> Pipeline:
                 "join_video",
                 "Concatena todos os vídeos da pergunta e alternativas em sequência",
             ),
+             AddBackgroundMusicStep(
+                "add_background_music_step",
+                "Adiciona música de fundo ao vídeo",
+                lambda context: {
+                    "final_video": context["composites"][0],
+                    "background_music_path": "src/countries_fun_facts/assets/background.mp3",
+                },
+            ),
             ExportVideo(
               "export_video",
               "Exporta o vídeo final para um arquivo MP4",

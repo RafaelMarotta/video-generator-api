@@ -32,7 +32,7 @@ class GenerateQuestionCanvas(Step):
 
         context["last_canvas"] = {
             "last_frame": composite.get_frame(composite.duration - 0.05),
-            "top_margin": top_margin + 200,
+            "top_margin": top_margin + 220,
         }
 
 

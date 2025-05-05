@@ -47,6 +47,7 @@ class GenerateCaptionAIStep(Step):
       size=(input.width, input.height),
       font=get_valid_font_path(input.font_path),
       stroke_color=input.stroke_color,
+      text_align=input.text_align,
       stroke_width=2,
       method="caption",
     ).with_duration(duration)

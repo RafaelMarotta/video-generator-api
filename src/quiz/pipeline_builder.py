@@ -48,6 +48,7 @@ def build_pipeline_quiz() -> Pipeline:
                     height=380,
                     stroke_color="white",
                     color="black",
+                    text_align="center",
                     background=BackgroundConfig(
                         color=(255, 255, 255), padding=40, width=800
                     ),
@@ -83,6 +84,7 @@ def build_pipeline_quiz() -> Pipeline:
                                 font_path=font_path,
                                 stroke_color="white",
                                 color="black",
+                                text_align="center",
                                 background=BackgroundConfig(
                                     color=(255, 255, 255)  # apenas a cor do fundo agora
                                     # opacity pode ser adicionado se quiser controlar transparência

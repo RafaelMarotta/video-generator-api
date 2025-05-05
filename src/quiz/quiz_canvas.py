@@ -32,7 +32,7 @@ class GenerateQuestionCanvas(Step):
 
         context["last_canvas"] = {
             "last_frame": composite.get_frame(composite.duration - 0.05),
-            "top_margin": top_margin + 220,
+            "top_margin": top_margin + 320,
         }
 
 
@@ -43,7 +43,7 @@ class GenerateAnswerCanvas(Step):
     def execute(self, input: dict, context: dict):
         typing_clip = input["typing_clip"]
         audio_clip = input["audio_clip"]
-        top_margin = input.get("top_margin", 0) + 210
+        top_margin = input.get("top_margin", 0) + 170
 
         last_frame = input.get("last_frame")
         background = (
@@ -85,13 +85,13 @@ class GenerateProgressBarCanvas(Step):
         )
 
         progress_bar_x = (1080 - progress_clip.w) // 2
-        progress_bar_y = 1500
-        clock_x = progress_bar_x - clock.w + 100  # 20 pixels gap between clock and progress bar
-        clock_y = progress_bar_y + (progress_clip.h - clock.h) // 2
+        progress_bar_y = 1480
+        #clock_x = progress_bar_x - clock.w + 100  # 20 pixels gap between clock and progress bar
+        #clock_y = progress_bar_y + (progress_clip.h - clock.h) // 2
 
         # Set positions
         progress_clip = progress_clip.with_position((progress_bar_x, progress_bar_y))
-        clock = clock.with_position((clock_x, clock_y))
+        clock = clock.with_position(("center", 175))
 
         # Create the composite video
         composite = CompositeVideoClip([background, progress_clip, clock])

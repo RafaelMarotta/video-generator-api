@@ -45,6 +45,7 @@ class GenerateCaptionInput:
     max_lines: int = 2
     width: int = 800
     height: int = 300
+    text_align: str = "left"
     max_chars_per_line: int = 20
     duration_per_letter: float = 0.20
     effect: str = ""

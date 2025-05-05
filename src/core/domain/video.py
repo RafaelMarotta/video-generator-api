@@ -51,9 +51,9 @@ class ExportVideo(Step):
 
     logger = CustomProgressLogger(video_id)
     final_video.write_videofile(output_path, fps=10, logger=logger)
-    progress_manager.publish(self.video_id, json.dumps({
+    progress_manager.publish(video_id, json.dumps({
       "event": "video_ready",
-      "video_id": self.video_id
+      "video_id": video_id
     }))
 
 

@@ -40,6 +40,7 @@ class GenerateCaptionInput:
     font_path: str = ""
     font_size: int = 70
     color: str = "white"
+    stroke_color: str = "black"
     background: Optional[BackgroundConfig] = None
     max_lines: int = 2
     width: int = 800

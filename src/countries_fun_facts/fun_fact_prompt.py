@@ -15,7 +15,7 @@ class GenerateFunFactInputStep(Step):
 
     def execute(self, input: dict, context: dict):
         country_name = input["country_name"]
-        fact_number = input.get("fact_number", "1")
+        number = input.get("number", "1")
 
         system_prompt = (
             "You are a creative assistant responsible for helping generate captivating short videos about fun facts related to different countries.\n\n"
@@ -25,7 +25,7 @@ class GenerateFunFactInputStep(Step):
             '  "fact_image_prompt": "[A detailed and realistic photo-style image prompt that represents the fun fact, without text, borders, logos, or frame.]",\n'
             '  "country_code": "[2-letter ISO country code]",\n'
             '  "fun_fact_text": "[A truly surprising, intriguing, or culturally rich fun fact about the country, written in Portuguese, using an engaging, storytelling tone. It should sound natural and interesting as if it were narrated to keep the viewer curious.]",\n'
-            '  "fact_number": "[The fact number as a string]"\n'
+            '  "number": "[The fact number as a string]"\n'
             "}\n\n"
             "Important guidelines:\n"
             "- Prioritize surprising, little-known, or very interesting facts instead of generic or obvious information.\n"
@@ -37,7 +37,7 @@ class GenerateFunFactInputStep(Step):
             "- Do NOT include any explanations, comments, or wrap the JSON in triple backticks."
         )
 
-        user_input = f"Country: {country_name}\nFact Number: {fact_number}"
+        user_input = f"Country: {country_name}\nFact Number: {number}"
 
         def validate_response(output: str) -> bool:
             try:
@@ -47,7 +47,7 @@ class GenerateFunFactInputStep(Step):
                     "fact_image_prompt",
                     "country_code",
                     "fun_fact_text",
-                    "fact_number",
+                    "number",
                 }
                 return isinstance(parsed, dict) and required_keys.issubset(
                     parsed.keys()

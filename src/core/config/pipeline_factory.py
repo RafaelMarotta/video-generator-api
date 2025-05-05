@@ -1,6 +1,7 @@
 from typing import Callable, Dict, List
 from core.domain.pipeline import Pipeline
 from countries_fun_facts.pipeline_builder import build_pipeline_fun_fact
+from quiz.pipeline_builder import build_pipeline_quiz
 
 class PipelineFactory:
   def __init__(self):
@@ -28,3 +29,4 @@ class PipelineFactory:
     
 pipeline_factory = PipelineFactory()
 pipeline_factory.register("pipeline_fun_fact_country", build_pipeline_fun_fact)
+pipeline_factory.register("pipeline_quiz", build_pipeline_quiz)

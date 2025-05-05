@@ -25,7 +25,7 @@ def build_pipeline_fun_fact() -> Pipeline:
                 "Gera o input completo para a curiosidade",
                 lambda context: {
                     "country_name": context["text"],
-                    "fact_number": context["fact_number"],
+                    "number": context["number"],
                 },
             ),
             GenerateImageStep(
@@ -60,8 +60,8 @@ def build_pipeline_fun_fact() -> Pipeline:
                 lambda context: {
                     "title_text": context["generate_fun_fact_input_step"]["title_text"],
                     "font_path": font_path,
-                    "fact_number": context["generate_fun_fact_input_step"][
-                        "fact_number"
+                    "number": context["generate_fun_fact_input_step"][
+                        "number"
                     ],
                     "background_path": "src/countries_fun_facts/assets/background-fun-facts.png",
                     "typing_clip": context["generate_fun_fact_typing"]["typing_clip"],

@@ -43,7 +43,7 @@ class GenerateAnswerCanvas(Step):
     def execute(self, input: dict, context: dict):
         typing_clip = input["typing_clip"]
         audio_clip = input["audio_clip"]
-        top_margin = input.get("top_margin", 0) + 175
+        top_margin = input.get("top_margin", 0) + 220
 
         last_frame = input.get("last_frame")
         background = (

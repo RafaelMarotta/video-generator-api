@@ -2,10 +2,10 @@ import ast
 import os
 import tempfile
 from moviepy import AudioFileClip, CompositeVideoClip, TextClip, concatenate_videoclips, ColorClip
+from core.commons.masks import rounded_mask
 from core.commons.openai import llm
 from core.commons.audio_processor import generate_tts
 from core.commons.font import get_valid_font_path
-from core.commons.masks import rounded_mask
 from core.domain.pipeline import Step
 from core.domain.caption import GenerateCaptionWithSpeechInput
 from typing import Callable
@@ -46,23 +46,21 @@ class GenerateCaptionAIStep(Step):
       color=input.color,
       size=(input.width, input.height),
       font=get_valid_font_path(input.font_path),
-      stroke_color="black",
+      stroke_color=input.stroke_color,
       stroke_width=2,
       method="caption",
     ).with_duration(duration)
 
     if input.background and input.background.color:
       rgb = parse_color(input.background.color)
-      padding = input.background.padding
-      w, h = text_clip.size
-      width = input.background.width or w
-      height = input.background.height or h
-      bg = ColorClip(size=(width + padding * 2, height + padding * 2), color=rgb).with_opacity(input.background.opacity)
-      mask_array = rounded_mask(bg.size, radius=40)
 
+      w,h = text_clip.size
+      bg = ColorClip(size=(w+30, h+30), color=rgb).with_opacity(input.background.opacity)
+      bg = bg.with_duration(duration)
+      mask_array = rounded_mask(bg.size, radius=40)
       bg = bg.with_mask(mask_array)
       bg = bg.with_duration(duration)
-      return CompositeVideoClip([bg, text_clip.with_position((padding, padding))])
+      return CompositeVideoClip([bg, text_clip])
     else:
       return text_clip
 
@@ -71,8 +69,7 @@ class GenerateCaptionAIStep(Step):
     with tempfile.NamedTemporaryFile(delete=False, suffix=".mp3") as f:
       f.write(audio_content)
       audio_path = f.name
-    audio_clip = AudioFileClip(audio_path)
-    return audio_clip
+    return AudioFileClip(audio_path)
 
   def generate_caption_blocks_and_ssml(self, input_data, expected_output=None):
     system_prompt = (
@@ -125,3 +122,7 @@ class GenerateCaptionAIStep(Step):
 
     parsed_output = ast.literal_eval(raw_blocks_and_ssml)
     return [" ".join(lines) for lines in parsed_output["blocks"]], parsed_output["ssml"]
+
+# Suporte simples de conversão de cor
+def parse_color(color: str):
+  return color;

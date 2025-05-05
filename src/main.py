@@ -48,7 +48,7 @@ async def generate_video(req: VideoRequest):
   context = {
     "id": video_id,
     "text": req.text,
-    "fact_number": "1",
+    "number": "1",
   }
 
   loop = asyncio.get_event_loop()
@@ -71,7 +71,6 @@ async def video_progress_stream(video_id: str, request: Request):
     queue = asyncio.Queue()
 
     def callback(message: str):
-      print(f"[SSE] Callback triggered: {message}")
       queue.put_nowait(message)
 
     progress_manager.subscribe(video_id, callback)
@@ -84,7 +83,6 @@ async def video_progress_stream(video_id: str, request: Request):
 
         try:
           message = await asyncio.wait_for(queue.get(), timeout=30)
-          print("📡 Enviando ao cliente:", message)
           yield f"{message}"
 
           if message.startswith("video_ready"):

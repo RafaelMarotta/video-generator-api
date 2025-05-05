@@ -126,7 +126,7 @@ def build_pipeline_quiz() -> Pipeline:
                 "add_background_music_step",
                 "Adiciona música de fundo ao vídeo",
                 lambda context: {
-                    "final_video": context["composites"][0],
+                    "final_video": context["join_video"]["final_video"],
                     "background_music_path": "src/countries_fun_facts/assets/background.mp3",
                 },
             ),

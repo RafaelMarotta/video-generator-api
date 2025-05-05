@@ -134,7 +134,7 @@ def build_pipeline_quiz() -> Pipeline:
               "export_video",
               "Exporta o vídeo final para um arquivo MP4",
               lambda context: {
-                "final_video": context["join_video"]["final_video"],
+                "final_video": context["add_background_music_step"]["final_video"],
                 "output_path": os.path.join(OUTPUT_PATH, context["id"] + ".mp4"),
               },
             ),

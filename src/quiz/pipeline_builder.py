@@ -8,7 +8,7 @@ from core.domain.caption import (
     GenerateCaptionWithSpeechInput,
     BackgroundConfig,
 )
-from core.domain.video import ConcatenateVideoStep, ExportVideo
+from core.domain.video import AddBackgroundMusicStep, ConcatenateVideoStep, ExportVideo
 from core.domain.debug import ExtractFrameStep
 from core.domain.progress_bar import GenerateProgressBarStep
 from quiz.quiz_prompt import GenerateQuizInputStep

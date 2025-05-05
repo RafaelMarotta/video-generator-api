@@ -116,8 +116,3 @@ class Pipeline(Step):
         publish_progress()
         step.run(context, write_debug=self.write_debug, debug_dir=self.debug_dir)
         step_index += 1
-
-    # Finaliza pipeline
-    progress_manager.publish(pipeline_id, json.dumps({
-      "event": "video_ready"
-    }))

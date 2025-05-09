@@ -5,8 +5,7 @@ from fastapi.responses import FileResponse
 from core.domain.upload import UploadYoutubeVideoStep
 from countries_fun_facts.fun_fact_prompt import GenerateFunFactInputStep
 from countries_fun_facts.fun_facts_canvas import GenerateFunFactCanvas
-from core.domain.caption import GenerateCaptionWithSpeechInput
-from core.domain.caption_ai import GenerateCaptionAIStep
+from core.domain.caption_ai import GenerateCaptionWithSpeechInput, GenerateCaptionWithSpeechStep
 from core.domain.image_ai import GenerateImageStep
 from core.domain.video import ConcatenateVideoStep, ExportVideo, AddBackgroundMusicStep
 from core.domain.pipeline import Pipeline
@@ -40,7 +39,7 @@ def build_pipeline_fun_fact() -> Pipeline:
                     "use_tempfile": False,
                 },
             ),
-            GenerateCaptionAIStep(
+            GenerateCaptionWithSpeechStep(
                 "generate_fun_fact_typing",
                 "Gera a legenda animada e a narração da curiosidade",
                 lambda context: GenerateCaptionWithSpeechInput(

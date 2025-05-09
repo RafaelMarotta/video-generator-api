@@ -7,10 +7,99 @@ from core.commons.openai import llm
 from core.commons.audio_processor import generate_tts
 from core.commons.font import get_valid_font_path
 from core.domain.pipeline import Step
-from core.domain.caption import GenerateCaptionWithSpeechInput
-from typing import Callable
+from typing import Callable, Optional
+from dataclasses import dataclass
 
-class GenerateCaptionAIStep(Step):
+@dataclass
+class BackgroundConfig:
+    color: Optional[str] = None 
+    padding: int = 30
+    width: Optional[int] = None
+    height: Optional[int] = None
+    opacity: float = 1.0
+
+@dataclass
+class GenerateCaptionInput:
+    text: str
+    font_path: str = ""
+    font_size: int = 70
+    color: str = "white"
+    stroke_color: str = "black"
+    background: Optional[BackgroundConfig] = None
+    max_lines: int = 2
+    width: int = 800
+    height: int = 300
+    text_align: str = "left"
+    max_chars_per_line: int = 20
+    duration_per_letter: float = 0.20
+    full_duration: float = 0
+    effect: str = ""
+
+@dataclass
+class GenerateCaptionWithSpeechInput(GenerateCaptionInput):
+  pass
+
+class GenerateCaptionStep(Step):
+  def format_text_clip(self, text: str, duration: float, input: GenerateCaptionInput):
+    text_clip = TextClip(
+      text=text,
+      font_size=input.font_size,
+      color=input.color,
+      size=(input.width, input.height),
+      font=get_valid_font_path(input.font_path),
+      stroke_color=input.stroke_color,
+      text_align=input.text_align,
+      stroke_width=2,
+      method="caption",
+    ).with_duration(duration)
+
+    if input.background and input.background.color:
+      rgb = parse_color(input.background.color)
+      w, h = text_clip.size
+      base_opacity = input.background.opacity
+      blink_min = 0.2
+      blink_step = 0.1
+      blink_interval = 0.25
+
+      if input.effect == "blink_opacity":
+        # Define how opacity changes with time
+        def get_opacity_at_time(t):
+          # Duration of one full cycle down and up
+          steps = int((base_opacity - blink_min) / blink_step)
+          total_cycle_time = blink_interval * steps * 2
+          t = t % total_cycle_time  # loop the effect
+          half_cycle = blink_interval * steps
+
+          if t < half_cycle:
+            return base_opacity - (int(t / blink_interval) * blink_step)
+          else:
+            return blink_min + (int((t - half_cycle) / blink_interval) * blink_step)
+
+        # Use make_frame to vary opacity
+        def make_frame(t):
+          opacity = get_opacity_at_time(t)
+          clip = ColorClip(size=(w+30, h+30), color=rgb).with_duration(duration)
+          frame = clip.get_frame(t)
+          return (frame * opacity).astype("uint8")
+
+        bg = VideoClip(make_frame=make_frame, duration=duration)
+        mask_array = rounded_mask((w + 30, h + 30), radius=40)
+        bg = bg.set_mask(mask_array)
+      else:
+        bg = ColorClip(size=(w+30, h+30), color=rgb).with_opacity(base_opacity).with_duration(duration)
+        mask_array = rounded_mask(bg.size, radius=40)
+        bg = bg.with_mask(mask_array)
+
+      return CompositeVideoClip([bg, text_clip])
+    else:
+      return text_clip
+  def execute(self, input: GenerateCaptionInput, context: dict):
+    text_clip = self.format_text_clip(input.text, input.full_duration, input)
+    context[self.name] = {
+      "typing_clip": text_clip
+    }
+
+class GenerateCaptionWithSpeechStep(GenerateCaptionStep):
   def __init__(self, name: str, description: str, input_transformer: Callable[[dict], dict] = None):
     super().__init__(name, description, input_transformer)
 
@@ -39,31 +128,7 @@ class GenerateCaptionAIStep(Step):
       "duration": audio_duration,
     }
 
-  def format_text_clip(self, text: str, duration: float, input: GenerateCaptionWithSpeechInput):
-    text_clip = TextClip(
-      text=text,
-      font_size=input.font_size,
-      color=input.color,
-      size=(input.width, input.height),
-      font=get_valid_font_path(input.font_path),
-      stroke_color=input.stroke_color,
-      text_align=input.text_align,
-      stroke_width=2,
-      method="caption",
-    ).with_duration(duration)
-
-    if input.background and input.background.color:
-      rgb = parse_color(input.background.color)
-
-      w,h = text_clip.size
-      bg = ColorClip(size=(w+30, h+30), color=rgb).with_opacity(input.background.opacity)
-      bg = bg.with_duration(duration)
-      mask_array = rounded_mask(bg.size, radius=40)
-      bg = bg.with_mask(mask_array)
-      bg = bg.with_duration(duration)
-      return CompositeVideoClip([bg, text_clip])
-    else:
-      return text_clip
+  
 
   def generate_audio_clip(self, ssml_text: str):
     audio_content = generate_tts(ssml_text, ssml=True)

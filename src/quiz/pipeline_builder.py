@@ -1,10 +1,10 @@
 # src/quiz/pipeline_builder.py
 
 import os
-from core.domain.caption_ai import GenerateCaptionAIStep
 from core.domain.pipeline import Pipeline, ForeachStep
-from core.domain.caption import (
-    GenerateCaptionStepWithSpeech,
+from core.domain.caption_ai import (
+    GenerateCaptionStep,
+    GenerateCaptionWithSpeechStep,
     GenerateCaptionWithSpeechInput,
     BackgroundConfig,
 )
@@ -35,7 +35,7 @@ def build_pipeline_quiz() -> Pipeline:
                     "number": context["number"],
                 },
             ),
-            GenerateCaptionAIStep(
+            GenerateCaptionWithSpeechStep(
                 "generate_question_typing",
                 "Gera a legenda animada e a narração da pergunta do quiz",
                 lambda context: GenerateCaptionWithSpeechInput(
@@ -71,7 +71,7 @@ def build_pipeline_quiz() -> Pipeline:
                     "answers_pipeline",
                     "Pipeline de geração de vídeos com alternativas do quiz",
                     [
-                        GenerateCaptionAIStep(
+                        GenerateCaptionWithSpeechStep(
                             "generate_answer_typing",
                             "Gera a legenda animada e a narração da alternativa",
                             lambda context: GenerateCaptionWithSpeechInput(
@@ -120,11 +120,31 @@ def build_pipeline_quiz() -> Pipeline:
                     "last_frame": context["last_canvas"]["last_frame"],
                 },
             ),
+            GenerateCaptionStep(
+                "generate_correct_answer_typing",
+                "Gera a legenda animada e a narração da alternativa",
+                lambda context: GenerateCaptionWithSpeechInput(
+                    text=context["input_step"]["answers"],
+                    max_lines=2,
+                    max_chars_per_line=25,
+                    width=800,
+                    height=120,
+                    font_size=55,  # ligeiramente maior
+                    font_path=font_path,
+                    stroke_color="white",
+                    color="black",
+                    text_align="center",
+                    background=BackgroundConfig(
+                        color=(27, 128, 37)  # apenas a cor do fundo agora
+                        # opacity pode ser adicionado se quiser controlar transparência
+                    ),
+                ),
+            ),
             ConcatenateVideoStep(
                 "join_video",
                 "Concatena todos os vídeos da pergunta e alternativas em sequência",
             ),
-             AddBackgroundMusicStep(
+            AddBackgroundMusicStep(
                 "add_background_music_step",
                 "Adiciona música de fundo ao vídeo",
                 lambda context: {
@@ -133,12 +153,12 @@ def build_pipeline_quiz() -> Pipeline:
                 },
             ),
             ExportVideo(
-              "export_video",
-              "Exporta o vídeo final para um arquivo MP4",
-              lambda context: {
-                "final_video": context["add_background_music_step"]["final_video"],
-                "output_path": os.path.join(OUTPUT_PATH, context["id"] + ".mp4"),
-              },
+                "export_video",
+                "Exporta o vídeo final para um arquivo MP4",
+                lambda context: {
+                    "final_video": context["add_background_music_step"]["final_video"],
+                    "output_path": os.path.join(OUTPUT_PATH, context["id"] + ".mp4"),
+                },
             ),
             # ExtractFrameStep(
             #     "extract_final_frame",

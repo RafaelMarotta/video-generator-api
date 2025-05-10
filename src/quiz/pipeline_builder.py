@@ -16,6 +16,7 @@ from quiz.quiz_canvas import (
     GenerateQuestionCanvas,
     GenerateAnswerCanvas,
     GenerateProgressBarCanvas,
+    GenerateCorrectAnswerCanvas
 )
 
 font_path = "/System/Library/Fonts/Supplemental/Arial.ttf"
@@ -80,14 +81,13 @@ def build_pipeline_quiz() -> Pipeline:
                                 max_chars_per_line=25,
                                 width=800,
                                 height=120,
-                                font_size=55,  # ligeiramente maior
+                                font_size=55,  
                                 font_path=font_path,
                                 stroke_color="white",
                                 color="black",
                                 text_align="center",
                                 background=BackgroundConfig(
-                                    color=(255, 255, 255)  # apenas a cor do fundo agora
-                                    # opacity pode ser adicionado se quiser controlar transparência
+                                    color=(255, 255, 255)  
                                 ),
                             ),
                         ),
@@ -124,21 +124,32 @@ def build_pipeline_quiz() -> Pipeline:
                 "generate_correct_answer_typing",
                 "Gera a legenda animada e a narração da alternativa",
                 lambda context: GenerateCaptionWithSpeechInput(
-                    text=context["input_step"]["answers"],
+                    text=next(a["text"] for a in context["input_step"]["answers"] if a.get("correct")),
                     max_lines=2,
                     max_chars_per_line=25,
                     width=800,
                     height=120,
-                    font_size=55,  # ligeiramente maior
+                    font_size=55,  
                     font_path=font_path,
-                    stroke_color="white",
-                    color="black",
+                    full_duration=3,
+                    stroke_color="black",
+                    color="white",
                     text_align="center",
                     background=BackgroundConfig(
-                        color=(27, 128, 37)  # apenas a cor do fundo agora
-                        # opacity pode ser adicionado se quiser controlar transparência
+                        color=(27, 128, 37)
                     ),
                 ),
+            ),
+            GenerateCorrectAnswerCanvas(
+                "generate_correct_answer_canvas",
+                "Gera o canvas da resposta correta",
+                lambda context: {
+                    "question_typing": context["generate_question_typing"]["typing_clip"],
+                    "answers_clips": context["create_answers"]["typings"],
+                    "typing_clip": context["generate_correct_answer_typing"]["typing_clip"],
+                    "correct_answer_idx": next((i for i, answer in enumerate(context["input_step"]["answers"]) if answer["correct"]), None),
+                    "background_path": "src/quiz/assets/background-quiz.png" 
+                }
             ),
             ConcatenateVideoStep(
                 "join_video",

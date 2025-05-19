@@ -8,3 +8,4 @@ debug/*
 src/countries_fun_facts/.DS_Store
 src/.DS_Store
 video-generator-api.code-workspace
+metrics/

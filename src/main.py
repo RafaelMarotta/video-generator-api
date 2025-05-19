@@ -26,6 +26,7 @@ VIDEO_DIR = os.getenv("OUTPUT_PATH", "")
 class VideoRequest(BaseModel):
   pipeline: str
   text: str
+  n: int
 
 class VideoResponse(BaseModel):
   text: str
@@ -48,7 +49,8 @@ async def generate_video(req: VideoRequest):
   context = {
     "id": video_id,
     "text": req.text,
-    "number": "1",
+    "n": req.n,
+    "number": req.n
   }
 
   loop = asyncio.get_event_loop()

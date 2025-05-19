@@ -44,7 +44,7 @@ class GenerateQuizInputStep(Step):
       "Important guidelines:\n"
       "- The question must NOT be a yes/no question and should ask only ONE thing at a time\n"
       "- Only ONE of the answers must be marked as correct (\"correct\": true)\n"
-      "- The quiz must be surprising, interesting or amusing — avoid technical, factual or obvious questions\n"
+      "- The quiz must be surprising, interesting or amusing — avoid obvious questions\n"
       "- Keep the question concise, direct, and engaging — avoid long or compound sentences\n"
       "- Output ONLY the pure JSON object, parsable as valid Python code using ast.literal_eval\n"
       "- Do NOT include explanations, comments, Markdown formatting, or any text before or after\n"

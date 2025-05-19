@@ -13,3 +13,4 @@ sse-starlette==2.3.3
 python-multipart==0.0.20
 aiofiles==24.1.0
 mysql-connector-python==9.3.0
+psutil==7.0.0

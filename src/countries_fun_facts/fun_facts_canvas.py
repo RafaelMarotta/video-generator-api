@@ -1,3 +1,4 @@
+from moviepy import vfx
 from core.commons.font import get_valid_font_path
 from core.commons.image import add_rounded_border_to_image_clip
 from core.domain.pipeline import Step
@@ -67,11 +68,25 @@ class GenerateFunFactCanvas(Step):
             else:
                 print(f"Warning: Flag image not found for {country_code} at {flag_path}")
 
+        # Primeiro composite sem freeze frame
         composite = CompositeVideoClip(clips)
         composite.audio = audio_clip
+
+        # Criar freeze frame baseado no último frame
+        last_frame = composite.get_frame(composite.duration - 0.05)
+        freeze_frame = (
+            ImageClip(last_frame)
+            .resized((1080, 1920))
+            .with_duration(3)
+            .with_position(("center", "center"))    
+            .with_audio(None)
+            .with_effects([vfx.FadeOut(duration=1.0)])
+        )
+
+        freeze_composite = CompositeVideoClip([freeze_frame])
 
         context[self.name] = {
             "final_frame": composite.get_frame(composite.duration - 0.05),
         }
 
-        context["composites"] = context.get("composites", []) + [composite]
+        context["composites"] = context.get("composites", []) + [composite, freeze_composite]

@@ -1,7 +1,7 @@
 # src/quiz/pipeline_builder.py
 
 import os
-from core.domain.pipeline import Pipeline, ForeachStep
+from core.domain.pipeline import Pipeline, ForeachStep, Step
 from core.domain.caption_ai import (
     GenerateCaptionStep,
     GenerateCaptionWithSpeechStep,
@@ -18,142 +18,190 @@ from quiz.quiz_canvas import (
     GenerateProgressBarCanvas,
     GenerateCorrectAnswerCanvas
 )
+from dataclasses import dataclass
 
 font_path = "/System/Library/Fonts/Supplemental/Arial.ttf"
 OUTPUT_PATH = os.getenv("OUTPUT_PATH", "")
 
+# Adicionando uma nova classe de Step concreta
+class StoreCurrentQuestionStep(Step):
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        input_transformer = None,
+    ):
+        super().__init__(name, description, input_transformer)
+
+    def execute(self, input: dict, context: dict):
+        context[self.name] = input
+        return input
+
+# Adicione esta nova classe no início do arquivo junto com as outras classes
+class ClearAnswersContextStep(Step):
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        input_transformer = None,
+    ):
+        super().__init__(name, description, input_transformer)
+
+    def execute(self, input: dict, context: dict):
+        # Limpa o contexto das respostas anteriores
+        if "create_answers" in context:
+            context["create_answers"] = {}
+        return input
 
 def build_pipeline_quiz() -> Pipeline:
     return Pipeline(
         "pipeline_quiz_animado",
-        "Pipeline de geração de vídeo animado com pergunta e 4 alternativas. Forneça o tema do quiz:",
+        "Pipeline de geração de vídeos animados com perguntas e respostas. Forneça o tema do quiz:",
         steps=[
             GenerateQuizInputStep(
                 "input_step",
                 "Gera o roteiro completo do quiz",
                 lambda context: {
                     "text": context["text"],
-                    "number": context["number"],
-                },
-            ),
-            GenerateCaptionWithSpeechStep(
-                "generate_question_typing",
-                "Gera a legenda animada e a narração da pergunta do quiz",
-                lambda context: GenerateCaptionWithSpeechInput(
-                    text=context["input_step"]["question"],
-                    max_lines=4,
-                    max_chars_per_line=32,
-                    font_size=55,
-                    font_path=font_path,
-                    width=800,
-                    height=380,
-                    stroke_color="white",
-                    color="black",
-                    text_align="center",
-                    background=BackgroundConfig(
-                        color=(255, 255, 255), padding=40, width=800
-                    ),
-                ),
-            ),
-            GenerateQuestionCanvas(
-                "generate_question_canvas",
-                "Monta o visual da pergunta com o background, legenda e áudio",
-                lambda context: {
-                    "background_path": "src/quiz/assets/background-quiz.png",
-                    "typing_clip": context["generate_question_typing"]["typing_clip"],
-                    "audio_clip": context["generate_question_typing"]["audio_clip"],
                 },
             ),
             ForeachStep(
-                "create_answers",
-                "Geração de vídeos com alternativas do quiz",
-                lambda context: {"items": context["input_step"]["answers"]},
+                "create_questions",
+                "Geração de vídeos para cada questão do quiz",
+                lambda context: {"items": context["input_step"]["questions"]},
                 Pipeline(
-                    "answers_pipeline",
-                    "Pipeline de geração de vídeos com alternativas do quiz",
+                    "question_pipeline",
+                    "Pipeline de geração de vídeo para cada questão",
                     [
+                        # Adiciona o step de limpeza no início
+                        ClearAnswersContextStep(
+                            "clear_answers_context",
+                            "Limpa o contexto das respostas anteriores",
+                        ),
+                        StoreCurrentQuestionStep(
+                            "store_current_question",
+                            "Armazena a questão atual para uso posterior",
+                            lambda context: {
+                                "current_question": context["current"]
+                            }
+                        ),
                         GenerateCaptionWithSpeechStep(
-                            "generate_answer_typing",
-                            "Gera a legenda animada e a narração da alternativa",
+                            "generate_question_typing",
+                            "Gera a legenda animada e a narração da pergunta do quiz",
                             lambda context: GenerateCaptionWithSpeechInput(
-                                text=context["current"]["text"],
-                                max_lines=2,
-                                max_chars_per_line=25,
-                                width=800,
-                                height=120,
-                                font_size=55,  
+                                text=context["current"]["question"],
+                                max_lines=4,
+                                max_chars_per_line=32,
+                                font_size=55,
                                 font_path=font_path,
+                                width=800,
+                                height=380,
                                 stroke_color="white",
                                 color="black",
                                 text_align="center",
                                 background=BackgroundConfig(
-                                    color=(255, 255, 255)  
+                                    color=(255, 255, 255), padding=40, width=800
                                 ),
                             ),
                         ),
-                        GenerateAnswerCanvas(
-                            "generate_answer_canvas",
-                            "Composição visual da alternativa",
+                        GenerateQuestionCanvas(
+                            "generate_question_canvas",
+                            "Monta o visual da pergunta com o background, legenda e áudio",
                             lambda context: {
-                                "last_frame": context["last_canvas"]["last_frame"],
-                                "top_margin": context["last_canvas"]["top_margin"],
-                                "typing_clip": context["generate_answer_typing"][
-                                    "typing_clip"
-                                ],
-                                "audio_clip": context["generate_answer_typing"][
-                                    "audio_clip"
-                                ],
+                                "background_path": "src/quiz/assets/background-quiz.png",
+                                "typing_clip": context["generate_question_typing"]["typing_clip"],
+                                "audio_clip": context["generate_question_typing"]["audio_clip"],
                             },
+                        ),
+                        ForeachStep(
+                            "create_answers",
+                            "Geração de vídeos com alternativas do quiz",
+                            lambda context: {"items": context["current"]["answers"]},
+                            Pipeline(
+                                "answers_pipeline",
+                                "Pipeline de geração de vídeos com alternativas do quiz",
+                                [
+                                    GenerateCaptionWithSpeechStep(
+                                        "generate_answer_typing",
+                                        "Gera a legenda animada e a narração da alternativa",
+                                        lambda context: GenerateCaptionWithSpeechInput(
+                                            text=context["current"]["text"],
+                                            max_lines=2,
+                                            max_chars_per_line=25,
+                                            width=800,
+                                            height=120,
+                                            font_size=55,
+                                            font_path=font_path,
+                                            stroke_color="white",
+                                            color="black",
+                                            text_align="center",
+                                            background=BackgroundConfig(
+                                                color=(255, 255, 255)
+                                            ),
+                                        ),
+                                    ),
+                                    GenerateAnswerCanvas(
+                                        "generate_answer_canvas",
+                                        "Composição visual da alternativa",
+                                        lambda context: {
+                                            "last_frame": context["last_canvas"]["last_frame"],
+                                            "top_margin": context["last_canvas"]["top_margin"],
+                                            "typing_clip": context["generate_answer_typing"]["typing_clip"],
+                                            "audio_clip": context["generate_answer_typing"]["audio_clip"],
+                                        },
+                                    ),
+                                ],
+                            ),
+                        ),
+                        GenerateProgressBarStep(
+                            "progress_bar",
+                            "Geração da barra de progresso do quiz",
+                        ),
+                        GenerateProgressBarCanvas(
+                            "progress_bar_canvas",
+                            "Renderiza visualmente a barra de progresso",
+                            lambda context: {
+                                "progress_clip": context["progress_bar"]["progress_clip"],
+                                "last_frame": context["last_canvas"]["last_frame"],
+                            },
+                        ),
+                        GenerateCaptionStep(
+                            "generate_correct_answer_typing",
+                            "Gera a legenda animada da resposta correta",
+                            lambda context: GenerateCaptionWithSpeechInput(
+                                text=next((a["text"] for a in context["store_current_question"]["current_question"]["answers"] if a.get("correct")), "Resposta correta não encontrada"),
+                                max_lines=2,
+                                max_chars_per_line=25,
+                                width=800,
+                                height=120,
+                                font_size=55,
+                                font_path=font_path,
+                                full_duration=3,
+                                stroke_color="black",
+                                color="white",
+                                text_align="center",
+                                background=BackgroundConfig(
+                                    color=(27, 128, 37)
+                                ),
+                            ),
+                        ),
+                        GenerateCorrectAnswerCanvas(
+                            "generate_correct_answer_canvas",
+                            "Gera o canvas da resposta correta",
+                            lambda context: {
+                                "question_typing": context["generate_question_typing"]["typing_clip"],
+                                "answers_clips": context["create_answers"].get("typings", []),
+                                "typing_clip": context["generate_correct_answer_typing"]["typing_clip"],
+                                "correct_answer_idx": next((i for i, answer in enumerate(context["store_current_question"]["current_question"]["answers"]) if answer.get("correct")), 0),
+                                "background_path": "src/quiz/assets/background-quiz.png"
+                            }
                         ),
                     ],
                 ),
             ),
-            GenerateProgressBarStep(
-                "progress_bar",
-                "Geração da barra de progresso do quiz",
-            ),
-            GenerateProgressBarCanvas(
-                "progress_bar_canvas",
-                "Renderiza visualmente a barra de progresso",
-                lambda context: {
-                    "progress_clip": context["progress_bar"]["progress_clip"],
-                    "last_frame": context["last_canvas"]["last_frame"],
-                },
-            ),
-            GenerateCaptionStep(
-                "generate_correct_answer_typing",
-                "Gera a legenda animada e a narração da alternativa",
-                lambda context: GenerateCaptionWithSpeechInput(
-                    text=next(a["text"] for a in context["input_step"]["answers"] if a.get("correct")),
-                    max_lines=2,
-                    max_chars_per_line=25,
-                    width=800,
-                    height=120,
-                    font_size=55,  
-                    font_path=font_path,
-                    full_duration=3,
-                    stroke_color="black",
-                    color="white",
-                    text_align="center",
-                    background=BackgroundConfig(
-                        color=(27, 128, 37)
-                    ),
-                ),
-            ),
-            GenerateCorrectAnswerCanvas(
-                "generate_correct_answer_canvas",
-                "Gera o canvas da resposta correta",
-                lambda context: {
-                    "question_typing": context["generate_question_typing"]["typing_clip"],
-                    "answers_clips": context["create_answers"]["typings"],
-                    "typing_clip": context["generate_correct_answer_typing"]["typing_clip"],
-                    "correct_answer_idx": next((i for i, answer in enumerate(context["input_step"]["answers"]) if answer["correct"]), None),
-                    "background_path": "src/quiz/assets/background-quiz.png" 
-                }
-            ),
             ConcatenateVideoStep(
                 "join_video",
-                "Concatena todos os vídeos da pergunta e alternativas em sequência",
+                "Concatena todos os vídeos das questões em sequência",
             ),
             AddBackgroundMusicStep(
                 "add_background_music_step",
@@ -171,11 +219,6 @@ def build_pipeline_quiz() -> Pipeline:
                     "output_path": os.path.join(OUTPUT_PATH, context["id"] + ".mp4"),
                 },
             ),
-            # ExtractFrameStep(
-            #     "extract_final_frame",
-            #     "Extrai o último frame do vídeo final",
-            #     lambda context: {"final_video": context["join_video"]["final_video"], "time_in_seconds": 8},
-            # ),
         ],
         write_debug=True,
     )

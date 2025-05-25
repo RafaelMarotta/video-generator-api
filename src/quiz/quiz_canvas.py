@@ -59,10 +59,10 @@ class GenerateAnswerCanvas(Step):
         composite = CompositeVideoClip([background, typing_clip])
         composite.audio = audio_clip
         
+        # Inicializa a lista de typings se não existir
         if "create_answers" not in context:
             context["create_answers"] = {}
-
-        if "typings" not in context["create_answers"] or context["create_answers"]["typings"] is None:
+        if "typings" not in context["create_answers"]:
             context["create_answers"]["typings"] = []
 
         context["composites"] = context.get("composites", []) + [composite]

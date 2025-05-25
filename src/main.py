@@ -27,6 +27,7 @@ class VideoRequest(BaseModel):
   pipeline: str
   text: str
   n: int
+  tone_prompt: str
 
 class VideoResponse(BaseModel):
   text: str
@@ -50,7 +51,8 @@ async def generate_video(req: VideoRequest):
     "id": video_id,
     "text": req.text,
     "n": req.n,
-    "number": req.n
+    "number": req.n,
+    "tone_prompt": req.tone_prompt
   }
 
   loop = asyncio.get_event_loop()

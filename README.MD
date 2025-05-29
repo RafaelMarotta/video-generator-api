@@ -106,3 +106,18 @@ Undergraduate Thesis (TCC) — **Pontifícia Universidade Católica de Minas Ger
 - Token persistence (`token.pickle`) is used to maintain sessions without repeated logins.
 - Pipelines are fully modular and can be expanded with new Steps easily.
 - New steps like animated progress bars and TTS integration are available for more dynamic videos.
+
+## MongoDB Integration
+
+This project uses MongoDB to track video request status. To configure MongoDB:
+
+- Set the `MONGO_URI` environment variable (default: `mongodb://localhost:27017`).
+- Set the `MONGO_DB` environment variable (default: `video_generator`).
+
+Each video request is saved in the `video_requests` collection with fields like `id`, `pipeline`, `text`, `n`, `tone_prompt`, and `status` (pending, processing, completed).
+
+You can run MongoDB with Docker:
+
+```sh
+docker run --name mongodb -d -p 27017:27017 -v $(pwd)/mongo-data:/data/db mongo
+```

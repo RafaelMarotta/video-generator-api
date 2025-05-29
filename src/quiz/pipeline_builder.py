@@ -219,6 +219,5 @@ def build_pipeline_quiz() -> Pipeline:
                     "output_path": os.path.join(OUTPUT_PATH, context["id"] + ".mp4"),
                 },
             ),
-        ],
-        write_debug=True,
+        ]
     )

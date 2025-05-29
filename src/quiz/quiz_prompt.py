@@ -84,13 +84,10 @@ class GenerateQuizInputStep(Step):
         "- Your personality should be immediately recognizable in how you phrase things\n"
     )
 
-    print("SYSTEM PROMPT:", system_prompt)
-
     user_input = f"Topic: {topic}\nNumber of Questions: {num_questions}"
 
     def validate_response(output: str) -> bool:
         try:
-            print("RAW OUTPUT FROM LLM:", repr(output))
             sanitized = sanitize_output(output)
             parsed = json.loads(sanitized)
             

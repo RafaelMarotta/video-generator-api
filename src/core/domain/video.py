@@ -16,12 +16,13 @@ class CustomProgressLogger(ProgressBarLogger):
       total = self.bars[bar].get("total", 1)
       percent = round((value / total) * 100, 2)
 
-      progress_manager.publish(self.video_id, json.dumps({
-        "event": "export_progress",
-        "video_id": self.video_id,
-        "step": bar,
-        "progress": percent
-      }))
+      if (bar == 'frame_index'): 
+        progress_manager.publish(self.video_id, json.dumps({
+          "event": "export_progress",
+          "video_id": self.video_id,
+          "step": bar,
+          "progress": percent
+        }))
     except Exception as e:
       print("Logger error:", e)
 
@@ -50,7 +51,7 @@ class ExportVideo(Step):
     video_id = context.get("id")
 
     logger = CustomProgressLogger(video_id)
-    final_video.write_videofile(output_path, fps=10, logger=logger)
+    final_video.write_videofile(output_path, fps=10, logger=logger, codec="libx264", audio_codec="aac", audio_bitrate="128k")
     progress_manager.publish(video_id, json.dumps({
       "event": "video_ready",
       "video_id": video_id

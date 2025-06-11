@@ -168,19 +168,34 @@ def get_video(video_id: str):
     raise HTTPException(status_code=404, detail="Video not found")
   return FileResponse(path, media_type="video/mp4")
 
+# Endpoint para consultar todas as métricas
+@app.get("/videos/metrics")
+async def get_all_metrics():
+  try:
+    print("Fetching all metrics...")
+    metrics = await video_metrics_repo.get_all()
+    print(f"Found {len(metrics)} metrics")
+    return JSONResponse(content=metrics)
+  except Exception as e:
+    print(f"Error fetching metrics: {str(e)}")
+    import traceback
+    print(traceback.format_exc())
+    raise HTTPException(status_code=500, detail=str(e))
+
+# Endpoint para consultar métricas de um vídeo específico
+@app.get("/videos/metrics/{video_id}")
+async def get_video_metrics(video_id: str):
+  doc = await video_metrics_repo.get(video_id)
+  if not doc:
+    raise HTTPException(status_code=404, detail="Metrics not found")
+  doc.pop("_id", None)
+  return JSONResponse(content=doc)
+
 # Endpoint para consultar uma requisição de vídeo
 @app.get("/videos/{video_id}")
 async def get_video_request(video_id: str):
   doc = await video_request_repo.get(video_id)
   if not doc:
     raise HTTPException(status_code=404, detail="Video request not found")
-  doc.pop("_id", None)
-  return JSONResponse(content=doc)
-
-@app.get("/videos/metrics/{video_id}")
-async def get_video_metrics(video_id: str):
-  doc = await video_metrics_repo.get(video_id)
-  if not doc:
-    raise HTTPException(status_code=404, detail="Metrics not found")
   doc.pop("_id", None)
   return JSONResponse(content=doc)
